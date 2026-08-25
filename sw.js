@@ -1,4 +1,4 @@
-const CACHE = 'school-run-calendar-v4';
+const CACHE = 'school-run-calendar-v5';
 const APP_SHELL = [
   './',
   './index.html',
