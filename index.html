@@ -1,0 +1,1289 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#0b0c10" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Mein Kalender" />
+  <meta name="format-detection" content="telephone=no" />
+  <link rel="manifest" href="./manifest.webmanifest" />
+  <link rel="apple-touch-icon" href="./apple-touch-icon.png" />
+  <link rel="icon" type="image/png" href="./icon-192.png" />
+  <script src="./config.js"></script>
+  <title>Mein Kalender</title>
+  <style>
+    :root {
+      --bg: #0b0c10;
+      --panel: #13151b;
+      --panel-2: #1a1d25;
+      --text: #f5f7fb;
+      --muted: #9aa3b2;
+      --line: #2a2f3a;
+      --school: #5f8cff;
+      --run: #53d18a;
+      --other: #b58cff;
+      --danger: #ff6b78;
+      --break: #697180;
+      --accent: #ffffff;
+    }
+
+    * { box-sizing: border-box; }
+    html { background: var(--bg); }
+    body {
+      margin: 0;
+      font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      min-height: 100dvh;
+      overscroll-behavior-y: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    button, input, textarea, select { font: inherit; }
+    button, .day-tab, .event { touch-action: manipulation; }
+    button { cursor: pointer; }
+
+    .app {
+      width: min(1500px, 100%);
+      margin: 0 auto;
+      padding: 18px;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      margin-bottom: 14px;
+      flex-wrap: wrap;
+    }
+
+    .title-wrap h1 {
+      margin: 0;
+      font-size: 22px;
+      letter-spacing: -0.02em;
+    }
+
+    .title-wrap p {
+      margin: 4px 0 0;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .toolbar {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      border: 1px solid var(--line);
+      background: var(--panel);
+      color: var(--text);
+      padding: 9px 12px;
+      border-radius: 10px;
+    }
+
+    .btn:hover { background: var(--panel-2); }
+    .btn.primary { background: #f5f7fb; color: #0b0c10; border-color: #f5f7fb; font-weight: 700; }
+    .btn.run-primary { background: color-mix(in srgb, var(--run) 82%, #fff); color: #07150d; border-color: var(--run); font-weight: 800; }
+    .btn.danger { color: #ffd7dc; border-color: #57313a; background: #24151a; }
+
+    .week-strip {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      margin-bottom: 12px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: var(--panel);
+      flex-wrap: wrap;
+    }
+
+    .week-title { font-weight: 800; }
+    .wah-badge, .stat-pill {
+      font-size: 12px;
+      color: var(--muted);
+      border: 1px solid var(--line);
+      padding: 6px 8px;
+      border-radius: 999px;
+      white-space: nowrap;
+    }
+    .stat-pill.good { color: #bff5d3; border-color: #28523a; background: #102319; }
+
+    .calendar-shell {
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      overflow: hidden;
+      background: var(--panel);
+      box-shadow: 0 14px 38px rgba(0,0,0,.18);
+    }
+
+    .calendar-scroll { overflow: auto; max-height: calc(100vh - 190px); }
+
+    .calendar {
+      min-width: 1050px;
+      display: grid;
+      grid-template-columns: 68px repeat(7, minmax(140px, 1fr));
+      position: relative;
+    }
+
+    .head {
+      position: sticky;
+      top: 0;
+      z-index: 8;
+      background: #101219;
+      border-bottom: 1px solid var(--line);
+      min-height: 58px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 8px;
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .head small { display: block; color: var(--muted); font-weight: 500; margin-top: 2px; }
+    .head.today { box-shadow: inset 0 -3px 0 var(--run); background: #141a18; }
+    .time-head { left: 0; z-index: 10; position: sticky; }
+
+    .time-cell, .day-cell {
+      height: 48px;
+      border-bottom: 1px solid rgba(255,255,255,.07);
+      border-right: 1px solid var(--line);
+      position: relative;
+    }
+
+    .time-cell {
+      position: sticky;
+      left: 0;
+      z-index: 5;
+      background: #101219;
+      color: #7f8998;
+      font-size: 10px;
+      text-align: right;
+      padding: 5px 8px 0 4px;
+      font-variant-numeric: tabular-nums;
+    }
+    .time-cell.half-hour { color: transparent; }
+
+    .day-cell { background: #0f1218; }
+    .day-cell.today { background: #101812; }
+    .day-cell:hover { background: #151922; }
+    .day-cell.half-hour { border-bottom-color: rgba(255,255,255,.035); }
+
+    .event-layer {
+      grid-column: 2 / 9;
+      grid-row: 2 / span 28;
+      position: absolute;
+      inset: 58px 0 auto 68px;
+      height: 1344px;
+      pointer-events: none;
+      z-index: 6;
+    }
+
+    .event {
+      position: absolute;
+      border-radius: 10px;
+      padding: 7px 8px;
+      overflow: hidden;
+      border: 1px solid rgba(255,255,255,0.11);
+      pointer-events: auto;
+      user-select: none;
+      box-shadow: 0 5px 18px rgba(0,0,0,0.18);
+    }
+
+    .event.school { background: #172133; border-left: 4px solid var(--school); }
+    .event.run { background: #14271d; border-left: 4px solid var(--run); padding-right: 38px; }
+    .event.run.done { opacity: .55; background: #111b15; }
+    .event.run.done .name { text-decoration: line-through; }
+    .run-check {
+      position: absolute;
+      right: 6px;
+      top: 6px;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      border: 1px solid rgba(255,255,255,.28);
+      background: rgba(4,15,9,.45);
+      color: #fff;
+      display: grid;
+      place-items: center;
+      padding: 0;
+      font-size: 13px;
+      font-weight: 900;
+      line-height: 1;
+    }
+    .run-check:hover { transform: scale(1.06); }
+    .event.run.done .run-check { background: var(--run); color: #08150d; border-color: var(--run); }
+    .event.other { background: #211a2e; border-left: 4px solid var(--other); }
+    .event.break {
+      background: color-mix(in srgb, var(--break) 22%, #11141a);
+      border: 1px dashed #737b89;
+      color: #d7dbe3;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2px 5px;
+      box-shadow: none;
+    }
+    .event.break .name { font-size: 10px; font-weight: 700; }
+    .event.break .meta { display: none; }
+
+    .event-top { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+    .event .name { font-weight: 800; font-size: 12px; line-height: 1.2; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .event .event-time { color: #b7bfcb; font-size: 10px; line-height: 1.2; white-space: nowrap; font-variant-numeric: tabular-nums; }
+    .event .event-desc { color: #b9c0cb; font-size: 10px; margin-top: 4px; line-height: 1.3; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; }
+    .event.short-event .event-desc { display: none; }
+    .event.tiny-event .event-time, .event.tiny-event .event-desc { display: none; }
+    .event.tiny-event { padding-top: 4px; padding-bottom: 4px; }
+
+    .now-line {
+      position: absolute;
+      height: 2px;
+      background: #ff6b78;
+      z-index: 20;
+      pointer-events: none;
+      border-radius: 999px;
+      box-shadow: 0 0 0 1px rgba(255,107,120,.12);
+    }
+    .now-line::before {
+      content: "";
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #ff6b78;
+      position: absolute;
+      left: -2px;
+      top: -2.5px;
+    }
+
+    .legend { display: flex; gap: 12px; color: var(--muted); font-size: 12px; align-items: center; flex-wrap: wrap; }
+    .legend span::before { content: ""; width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 5px; }
+    .legend .school::before { background: var(--school); }
+    .legend .run::before { background: var(--run); }
+    .legend .other::before { background: var(--other); }
+    .legend .break::before { background: var(--break); }
+
+    dialog {
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: #11141a;
+      color: var(--text);
+      width: min(480px, calc(100vw - 24px));
+      padding: 0;
+      box-shadow: 0 24px 80px rgba(0,0,0,.5);
+    }
+
+    dialog::backdrop { background: rgba(0,0,0,.68); }
+    .modal { padding: 18px; }
+    .modal h2 { margin: 0 0 14px; font-size: 18px; }
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .field { display: flex; flex-direction: column; gap: 5px; }
+    .field.full { grid-column: 1 / -1; }
+    label { color: var(--muted); font-size: 12px; }
+    input, textarea, select {
+      width: 100%;
+      border: 1px solid var(--line);
+      background: #0d1016;
+      color: var(--text);
+      border-radius: 9px;
+      padding: 9px 10px;
+      outline: none;
+    }
+    textarea { min-height: 90px; resize: vertical; }
+    .modal-actions { margin-top: 14px; display: flex; justify-content: space-between; gap: 8px; }
+    .modal-actions .left, .modal-actions .right { display: flex; gap: 8px; flex-wrap: wrap; }
+    .quick-run-buttons { display: flex; gap: 7px; flex-wrap: wrap; }
+    .quick-run-buttons button { flex: 1 1 110px; }
+    .toggle-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 8px;
+      padding: 9px 10px;
+      border: 1px solid var(--line);
+      border-radius: 9px;
+      color: var(--text);
+      background: #0d1016;
+      cursor: pointer;
+    }
+    .toggle-row input { width: auto; margin: 0; }
+
+    .empty-hint {
+      position: fixed;
+      right: 18px;
+      bottom: 18px;
+      color: var(--muted);
+      background: rgba(17,20,26,.92);
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 8px 10px;
+      font-size: 11px;
+      backdrop-filter: blur(10px);
+    }
+
+    .mobile-day-tabs,
+    .mobile-day-summary,
+    .mobile-actions { display: none; }
+
+    @media (max-width: 700px) {
+      body { overflow: hidden; }
+
+      .app {
+        width: 100%;
+        padding: calc(8px + env(safe-area-inset-top)) 8px calc(84px + env(safe-area-inset-bottom));
+        height: 100dvh;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .topbar {
+        margin-bottom: 8px;
+        gap: 8px;
+        flex-wrap: nowrap;
+      }
+      .title-wrap h1 { font-size: 19px; }
+      .title-wrap p { display: none; }
+      .topbar .toolbar { gap: 5px; margin-left: auto; flex-wrap: nowrap; }
+      .topbar .toolbar .btn {
+        min-width: 42px;
+        height: 42px;
+        padding: 0 10px;
+        border-radius: 12px;
+      }
+      #prevWeek, #nextWeek { font-size: 0; width: 42px; padding: 0; }
+      #prevWeek::after { content: "‹"; font-size: 27px; line-height: 1; }
+      #nextWeek::after { content: "›"; font-size: 27px; line-height: 1; }
+      #todayBtn { padding: 0 11px; }
+      #newRun, #newEvent { display: none; }
+
+      .week-strip {
+        display: block;
+        margin-bottom: 8px;
+        padding: 9px 10px;
+        border-radius: 12px;
+      }
+      .week-title { font-size: 14px; }
+      .week-strip .legend { display: none; }
+      .week-strip > .toolbar {
+        margin-top: 7px;
+        gap: 6px;
+        justify-content: flex-start;
+      }
+      .week-strip #exportBtn,
+      .week-strip #importBtn { display: none; }
+      .stat-pill, .wah-badge { padding: 5px 7px; font-size: 11px; }
+
+      .mobile-day-tabs {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        gap: 4px;
+        margin-bottom: 8px;
+      }
+      .day-tab {
+        min-width: 0;
+        border: 1px solid var(--line);
+        background: var(--panel);
+        color: var(--muted);
+        border-radius: 10px;
+        padding: 6px 2px 5px;
+        text-align: center;
+        line-height: 1.05;
+      }
+      .day-tab strong { display: block; font-size: 11px; color: inherit; }
+      .day-tab small { display: block; margin-top: 4px; font-size: 11px; }
+      .day-tab.active {
+        background: #f5f7fb;
+        color: #0b0c10;
+        border-color: #f5f7fb;
+        font-weight: 800;
+      }
+      .day-tab.today:not(.active) { border-color: var(--run); color: #d6ffe4; }
+      .day-tab.has-run::after {
+        content: "";
+        display: block;
+        width: 4px;
+        height: 4px;
+        border-radius: 50%;
+        background: var(--run);
+        margin: 4px auto 0;
+      }
+      .day-tab.has-run.active::after { background: #0b0c10; }
+
+      .mobile-day-summary {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        margin: 0 2px 8px;
+        padding: 0 2px;
+        min-height: 30px;
+      }
+      .mobile-day-summary strong {
+        font-size: 14px;
+        letter-spacing: -0.01em;
+      }
+      .mobile-day-summary span {
+        min-width: 0;
+        color: var(--muted);
+        font-size: 11px;
+        text-align: right;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .calendar-shell {
+        flex: 1;
+        min-height: 0;
+        border-radius: 14px;
+      }
+      .calendar-scroll {
+        height: 100%;
+        max-height: none;
+        overflow-x: hidden;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+        scroll-behavior: smooth;
+      }
+      .calendar {
+        min-width: 100%;
+        grid-template-columns: 54px minmax(0, 1fr);
+      }
+      .head { min-height: 46px; padding: 5px; background: #0f1218; }
+      .head:not(.time-head) { font-size: 15px; justify-content: flex-start; text-align: left; padding-left: 12px; }
+      .head small { display: inline; margin: 0 0 0 6px; font-size: 11px; }
+      .time-head { font-size: 9px; color: #76808f; }
+      .time-cell, .day-cell { height: 54px; }
+      .time-cell { font-size: 10px; padding-right: 7px; padding-top: 6px; }
+      .event-layer {
+        grid-column: 2 / -1;
+        inset: 46px 0 auto 54px;
+        height: 1512px;
+      }
+      .event {
+        border-radius: 11px;
+        padding: 7px 9px;
+        box-shadow: 0 3px 12px rgba(0,0,0,.16);
+      }
+      .event .name { font-size: 13px; }
+      .event .event-time { font-size: 10px; }
+      .event .event-desc { font-size: 10px; -webkit-line-clamp: 2; }
+      .event.school .event-desc { color: #9ca9bd; }
+      .event.run .name { font-size: 14px; }
+      .event.break { border-radius: 6px; opacity: .78; }
+      .event.break .name { font-size: 9px; letter-spacing: .02em; }
+      .run-check {
+        width: 28px;
+        height: 28px;
+        right: 7px;
+        top: 7px;
+      }
+      .event.run { padding-right: 42px; }
+
+      dialog {
+        width: 100%;
+        max-width: none;
+        margin: auto 0 0;
+        border-radius: 20px 20px 0 0;
+        max-height: 92dvh;
+        overflow: auto;
+      }
+      .modal {
+        padding: 18px 14px calc(16px + env(safe-area-inset-bottom));
+      }
+      .modal h2 { font-size: 19px; }
+      .form-grid { grid-template-columns: 1fr; gap: 11px; }
+      .field.full { grid-column: auto; }
+      input, textarea, select {
+        min-height: 46px;
+        font-size: 16px;
+        border-radius: 11px;
+      }
+      textarea { min-height: 78px; }
+      .toggle-row { min-height: 46px; }
+      .modal-actions {
+        align-items: stretch;
+        flex-direction: column-reverse;
+      }
+      .modal-actions .left,
+      .modal-actions .right { width: 100%; }
+      .modal-actions .right .btn { flex: 1; min-height: 46px; }
+      .modal-actions .left .btn { flex: 1; min-height: 42px; }
+
+      .mobile-actions {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+        position: fixed;
+        left: 8px;
+        right: 8px;
+        bottom: calc(8px + env(safe-area-inset-bottom));
+        z-index: 30;
+        padding: 8px;
+        border: 1px solid var(--line);
+        border-radius: 16px;
+        background: rgba(17,20,26,.92);
+        backdrop-filter: blur(18px);
+        -webkit-backdrop-filter: blur(18px);
+        box-shadow: 0 12px 40px rgba(0,0,0,.35);
+      }
+      .mobile-actions .btn {
+        min-height: 48px;
+        border-radius: 12px;
+        font-weight: 800;
+      }
+
+      .empty-hint { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <div class="topbar">
+      <div class="title-wrap">
+        <h1>Mein Kalender</h1>
+        <p>Schule, Runs und Termine.</p>
+      </div>
+      <div class="toolbar">
+        <button class="btn" id="prevWeek">← Woche</button>
+        <button class="btn" id="todayBtn">Heute</button>
+        <button class="btn" id="nextWeek">Woche →</button>
+        <button class="btn run-primary" id="newRun">+ Run</button>
+        <button class="btn primary" id="newEvent">+ Ereignis</button>
+      </div>
+    </div>
+
+    <div class="week-strip">
+      <div>
+        <div class="week-title" id="weekTitle"></div>
+        <div class="legend">
+          <span class="school">Schule</span>
+          <span class="run">Run</span>
+          <span class="other">Termine</span>
+          <span class="break">Pause</span>
+        </div>
+      </div>
+      <div class="toolbar">
+        <span class="stat-pill" id="runProgress"></span>
+        <span class="wah-badge" id="wahBadge"></span>
+        <button class="btn" id="exportBtn">Export</button>
+        <button class="btn" id="importBtn">Import</button>
+        <input id="importFile" type="file" accept="application/json" hidden />
+      </div>
+    </div>
+
+    <div class="mobile-day-tabs" id="mobileDayTabs" aria-label="Wochentage"></div>
+    <div class="mobile-day-summary" id="mobileDaySummary" aria-live="polite"></div>
+
+    <section class="calendar-shell">
+      <div class="calendar-scroll">
+        <div class="calendar" id="calendar"></div>
+      </div>
+    </section>
+  </main>
+
+  <div class="mobile-actions" aria-label="Schnellaktionen">
+    <button class="btn run-primary" id="newRunMobile">+ Run</button>
+    <button class="btn primary" id="newEventMobile">+ Termin</button>
+  </div>
+
+  <div class="empty-hint">Klick in den Kalender = neuer Termin</div>
+
+  <dialog id="eventDialog">
+    <form method="dialog" class="modal" id="eventForm">
+      <h2 id="dialogTitle">Ereignis</h2>
+      <div class="form-grid">
+        <div class="field full">
+          <label for="name">Name</label>
+          <input id="name" required maxlength="80" placeholder="z. B. Easy Run" />
+        </div>
+        <div class="field full">
+          <label for="description">Beschreibung</label>
+          <textarea id="description" placeholder="Optional"></textarea>
+        </div>
+        <div class="field">
+          <label for="date">Datum</label>
+          <input id="date" type="date" required />
+        </div>
+        <div class="field">
+          <label for="type">Typ</label>
+          <select id="type">
+            <option value="other">Normal</option>
+            <option value="run">Run</option>
+            <option value="school">Schule</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="start">Start</label>
+          <input id="start" type="time" required />
+        </div>
+        <div class="field">
+          <label for="end">Ende</label>
+          <input id="end" type="time" required />
+        </div>
+        <div class="field full" id="runOptions" hidden>
+          <label>Schnell auswählen</label>
+          <div class="quick-run-buttons">
+            <button type="button" class="btn" data-run-preset="easy">Easy Run</button>
+            <button type="button" class="btn" data-run-preset="quality">Quality</button>
+            <button type="button" class="btn" data-run-preset="long">Long Run</button>
+          </div>
+          <label class="toggle-row"><input id="runDone" type="checkbox" /> Run erledigt</label>
+        </div>
+      </div>
+      <div class="modal-actions">
+        <div class="left">
+          <button type="button" class="btn danger" id="deleteEvent">Löschen</button>
+          <button type="button" class="btn" id="duplicateEvent">Duplizieren</button>
+        </div>
+        <div class="right">
+          <button type="button" class="btn" id="cancelEvent">Abbrechen</button>
+          <button type="submit" class="btn primary">Speichern</button>
+        </div>
+      </div>
+    </form>
+  </dialog>
+
+  <script>
+    const START_HOUR = 7;
+    const END_HOUR = 21;
+    const DESKTOP_SLOT_HEIGHT = 48; // 30 minutes
+    const MOBILE_SLOT_HEIGHT = 54;
+    const STORAGE_KEY = 'school-run-calendar-v1';
+    const DAY_NAMES = ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'];
+    const MONTHS = ['Jan', 'Feb', 'Mär', 'Apr', 'Mai', 'Jun', 'Jul', 'Aug', 'Sep', 'Okt', 'Nov', 'Dez'];
+
+    // WAH: week starting 2026-08-24 = NOT user's week; following week = user's week.
+    const WAH_OFF_ANCHOR = new Date('2026-08-24T00:00:00');
+
+    let weekStart = getMonday(new Date());
+    let editingId = null;
+    let state = loadState();
+    let mobileDayIndex = Math.min(6, Math.max(0, (new Date().getDay() + 6) % 7));
+    let lastMobileMode = window.matchMedia('(max-width: 700px)').matches;
+
+    function isMobile() { return window.matchMedia('(max-width: 700px)').matches; }
+    function slotHeight() { return isMobile() ? MOBILE_SLOT_HEIGHT : DESKTOP_SLOT_HEIGHT; }
+
+    const calendarEl = document.getElementById('calendar');
+    const weekTitleEl = document.getElementById('weekTitle');
+    const wahBadgeEl = document.getElementById('wahBadge');
+    const runProgressEl = document.getElementById('runProgress');
+    const dialog = document.getElementById('eventDialog');
+    const form = document.getElementById('eventForm');
+    const deleteBtn = document.getElementById('deleteEvent');
+    const duplicateBtn = document.getElementById('duplicateEvent');
+    const runOptionsEl = document.getElementById('runOptions');
+    const runDoneEl = document.getElementById('runDone');
+
+    function uid() {
+      return (crypto.randomUUID ? crypto.randomUUID() : String(Date.now()) + Math.random());
+    }
+
+    function pad(n) { return String(n).padStart(2, '0'); }
+    function isoDate(d) { return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`; }
+
+    function getMonday(input) {
+      const d = new Date(input);
+      d.setHours(0,0,0,0);
+      const day = (d.getDay() + 6) % 7;
+      d.setDate(d.getDate() - day);
+      return d;
+    }
+
+    function addDays(d, n) {
+      const x = new Date(d);
+      x.setDate(x.getDate() + n);
+      return x;
+    }
+
+    function addWeeks(d, n) { return addDays(d, n * 7); }
+
+    function isWahWeek(monday) {
+      const diffWeeks = Math.round((getMonday(monday) - WAH_OFF_ANCHOR) / (7 * 24 * 3600 * 1000));
+      return Math.abs(diffWeeks % 2) === 1;
+    }
+
+    function loadState() {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) {
+        try {
+          const parsed = JSON.parse(saved);
+          parsed.events = Array.isArray(parsed.events) ? parsed.events.map(e => {
+            const inferredDone = e.type === 'run' && /✓\s*$/.test(e.name || '');
+            return {
+              ...e,
+              name: inferredDone ? String(e.name).replace(/\s*✓\s*$/, '') : e.name,
+              done: e.type === 'run' ? Boolean(e.done ?? inferredDone) : false,
+            };
+          }) : [];
+          return parsed;
+        } catch (_) {}
+      }
+      return { events: seedPersonalEvents() };
+    }
+
+    function saveState() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      syncStateToCloud().catch(() => {});
+    }
+
+    function apiBase() {
+      return (window.CALENDAR_API_URL || '').replace(/\/$/, '');
+    }
+
+    function apiToken() {
+      return localStorage.getItem('calendar_api_token') || '';
+    }
+
+    function apiHeaders() {
+      const h = { 'Content-Type': 'application/json' };
+      const token = apiToken();
+      if (token) h.Authorization = `Bearer ${token}`;
+      return h;
+    }
+
+    async function syncStateToCloud() {
+      const base = apiBase();
+      if (!base) return;
+      const res = await fetch(`${base}/api/events`, {
+        method: 'PUT',
+        headers: apiHeaders(),
+        body: JSON.stringify({ events: state.events })
+      });
+      if (res.status === 401) return;
+      if (!res.ok) throw new Error('Cloud sync failed');
+    }
+
+    async function syncStateFromCloud() {
+      const base = apiBase();
+      if (!base) return;
+      const res = await fetch(`${base}/api/events`, { headers: apiHeaders() });
+      if (res.status === 401) {
+        if (!apiToken()) {
+          const token = prompt('Kalender-Sync Token eingeben (einmalig):');
+          if (token) {
+            localStorage.setItem('calendar_api_token', token.trim());
+            return syncStateFromCloud();
+          }
+        }
+        return;
+      }
+      if (!res.ok) return;
+      const data = await res.json();
+      if (Array.isArray(data.events) && data.events.length) {
+        state.events = data.events;
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+        render();
+      } else if (state.events.length) {
+        await syncStateToCloud();
+      }
+    }
+
+    function seedPersonalEvents() {
+      return [
+        {
+          id: uid(), name: 'Long Run', description: 'Diese Woche bereits erledigt: ca. 13 km.',
+          date: '2026-08-24', start: '18:00', end: '19:20', type: 'run', done: true
+        },
+        {
+          id: uid(), name: 'Easy Run', description: '5–6 km sehr locker. Ziel: Erholung + aerobe Basis.',
+          date: '2026-08-26', start: '18:15', end: '19:00', type: 'run', done: false
+        },
+        {
+          id: uid(), name: 'Quality Run', description: '2 km locker → 3×1 km @ ca. 4:00–4:10/km, 2 min locker → auslaufen.',
+          date: '2026-08-29', start: '10:30', end: '11:30', type: 'run', done: false
+        },
+        {
+          id: uid(), name: 'Easy Run', description: '6–8 km locker, ungefähr 5:30–6:00/km.',
+          date: '2026-08-30', start: '11:00', end: '12:00', type: 'run', done: false
+        }
+      ];
+    }
+
+    // School timetable transcribed from the provided image. The generic “X” blocks are kept as X,
+    // so you can rename them later if you want. School events are generated dynamically and not stored.
+    function schoolEventsForWeek(monday) {
+      const d = (offset) => isoDate(addDays(monday, offset));
+      const events = [
+        // Monday
+        { name: 'Block 1A', description: 'TxG / Mu / TeG / BG / MINT (gemäss Plan)', date: d(0), start: '08:00', end: '09:35', type: 'school' },
+        { name: 'X', description: 'Raum 02.44', date: d(0), start: '09:55', end: '12:25', type: 'school' },
+        { name: 'Sport', description: 'Halle gem. Plan', date: d(0), start: '14:10', end: '15:45', type: 'school' },
+
+        // Tuesday
+        { name: 'X', description: 'Unterricht gemäss Stundenplan', date: d(1), start: '08:00', end: '12:25', type: 'school' },
+        { name: 'ERG', description: 'Aula / 02.44 gemäss Plan', date: d(1), start: '14:10', end: '14:55', type: 'school' },
+        { name: 'BO', description: 'Raum 02.44', date: d(1), start: '15:00', end: '15:45', type: 'school' },
+
+        // Wednesday
+        { name: 'X', description: 'Unterricht gemäss Stundenplan', date: d(2), start: '08:00', end: '11:30', type: 'school' },
+        { name: 'Philos / Theater / HIIE', description: 'Wahl-/Atelierblock gemäss Plan', date: d(2), start: '15:00', end: '17:25', type: 'school' },
+
+        // Thursday
+        { name: 'X', description: 'Unterricht gemäss Stundenplan', date: d(3), start: '08:00', end: '09:35', type: 'school' },
+        { name: 'MIA', description: 'Raum 03.12', date: d(3), start: '09:55', end: '10:40', type: 'school' },
+        { name: 'Block 2A', description: 'TeG / LI / BG / TxG (gemäss Plan)', date: d(3), start: '14:10', end: '15:45', type: 'school' },
+
+        // Friday
+        { name: 'Sport', description: 'Halle gem. Plan', date: d(4), start: '08:00', end: '08:45', type: 'school' },
+        { name: 'X', description: 'Unterricht gemäss Stundenplan', date: d(4), start: '08:50', end: '13:15', type: 'school' },
+        { name: 'X', description: 'Raum 02.44', date: d(4), start: '14:10', end: '15:45', type: 'school' },
+      ];
+
+      if (isWahWeek(monday)) {
+        events.push(
+          { name: 'WAH', description: 'Deine rotierende WAH-Woche', date: d(2), start: '11:40', end: '12:25', type: 'school' },
+          { name: 'WAH', description: 'Deine rotierende WAH-Woche', date: d(3), start: '10:45', end: '14:06', type: 'school' }
+        );
+      }
+      return events;
+    }
+
+    // Feste Schulpausen aus deinem Stundenplan.
+    // Vormittag: 09:35–09:55, kurze Pause: 11:30–11:40.
+    function schoolBreaksForWeek(monday) {
+      const d = (offset) => isoDate(addDays(monday, offset));
+      const breaks = [];
+      for (let day = 0; day < 5; day++) {
+        breaks.push(
+          { name: 'Pause', description: '', date: d(day), start: '09:35', end: '09:55', type: 'break' },
+          { name: 'Pause', description: '', date: d(day), start: '11:30', end: '11:40', type: 'break' }
+        );
+      }
+      return breaks;
+    }
+
+    function minutes(time) {
+      const [h, m] = time.split(':').map(Number);
+      return h * 60 + m;
+    }
+
+    function renderMobileDayTabs(fullWeek) {
+      const tabs = document.getElementById('mobileDayTabs');
+      if (!tabs) return;
+      tabs.innerHTML = '';
+      const today = isoDate(new Date());
+      fullWeek.forEach((date, i) => {
+        const dayIso = isoDate(date);
+        const hasRun = state.events.some(e => e.type === 'run' && e.date === dayIso);
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.className = `day-tab${i === mobileDayIndex ? ' active' : ''}${dayIso === today ? ' today' : ''}${hasRun ? ' has-run' : ''}`;
+        b.innerHTML = `<strong>${DAY_NAMES[i]}</strong><small>${date.getDate()}</small>`;
+        b.addEventListener('click', () => {
+          mobileDayIndex = i;
+          render();
+          requestAnimationFrame(() => scrollToDayStart(dayIso));
+        });
+        tabs.appendChild(b);
+      });
+    }
+
+    function renderMobileDaySummary(fullWeek) {
+      const el = document.getElementById('mobileDaySummary');
+      if (!el || !isMobile()) return;
+      const date = fullWeek[mobileDayIndex];
+      const dayIso = isoDate(date);
+      const school = schoolEventsForWeek(weekStart).filter(e => e.date === dayIso);
+      const personal = state.events.filter(e => e.date === dayIso).sort((a,b) => minutes(a.start) - minutes(b.start));
+      const schoolEnd = school.length ? school.map(e => e.end).sort().at(-1) : null;
+      const runs = personal.filter(e => e.type === 'run');
+      const nextPersonal = personal[0];
+      const bits = [];
+      if (schoolEnd) bits.push(`Schule bis ${schoolEnd}`);
+      else if (mobileDayIndex >= 5) bits.push('Keine Schule');
+      if (runs.length) bits.push(`${runs.length} Run${runs.length > 1 ? 's' : ''}`);
+      else if (nextPersonal) bits.push(`${nextPersonal.name} ${nextPersonal.start}`);
+      else bits.push('Sonst frei');
+      el.innerHTML = `<strong>${DAY_NAMES[mobileDayIndex]}, ${date.getDate()}. ${MONTHS[date.getMonth()]}</strong><span>${escapeHtml(bits.join(' · '))}</span>`;
+    }
+
+    function render() {
+      calendarEl.innerHTML = '';
+      const fullWeek = Array.from({length: 7}, (_, i) => addDays(weekStart, i));
+      const days = isMobile() ? [fullWeek[mobileDayIndex]] : fullWeek;
+      renderMobileDayTabs(fullWeek);
+      renderMobileDaySummary(fullWeek);
+
+      const timeHead = document.createElement('div');
+      timeHead.className = 'head time-head';
+      timeHead.textContent = 'Zeit';
+      calendarEl.appendChild(timeHead);
+
+      const todayIso = isoDate(new Date());
+      days.forEach((date) => {
+        const safeIndex = isMobile() ? mobileDayIndex : ((date.getDay() + 6) % 7);
+        const h = document.createElement('div');
+        h.className = 'head' + (isoDate(date) === todayIso ? ' today' : '');
+        h.innerHTML = `${DAY_NAMES[safeIndex]}<small>${pad(date.getDate())}. ${MONTHS[date.getMonth()]}</small>`;
+        calendarEl.appendChild(h);
+      });
+
+      for (let slot = 0; slot < (END_HOUR - START_HOUR) * 2; slot++) {
+        const totalMin = START_HOUR * 60 + slot * 30;
+        const hh = Math.floor(totalMin / 60);
+        const mm = totalMin % 60;
+        const label = document.createElement('div');
+        label.className = 'time-cell' + (mm === 30 ? ' half-hour' : '');
+        label.textContent = mm === 0 ? `${pad(hh)}:00` : '';
+        calendarEl.appendChild(label);
+
+        days.forEach((date, dayIndex) => {
+          const cell = document.createElement('div');
+          cell.className = 'day-cell' + (isoDate(date) === todayIso ? ' today' : '') + (mm === 30 ? ' half-hour' : '');
+          cell.dataset.date = isoDate(date);
+          cell.dataset.time = `${pad(hh)}:${pad(mm)}`;
+          cell.addEventListener('click', () => openNew(cell.dataset.date, cell.dataset.time));
+          calendarEl.appendChild(cell);
+        });
+      }
+
+      const layer = document.createElement('div');
+      layer.className = 'event-layer';
+      calendarEl.appendChild(layer);
+
+      const school = schoolEventsForWeek(weekStart);
+      const breaks = schoolBreaksForWeek(weekStart);
+      const startDate = isoDate(weekStart);
+      const endDate = isoDate(addDays(weekStart, 6));
+      const personal = state.events.filter(e => e.date >= startDate && e.date <= endDate);
+      school.forEach(e => renderEvent(layer, e, days, true));
+      personal.forEach(e => renderEvent(layer, e, days, false));
+      // Pausen zuletzt rendern, damit sie auch bei langen Schulblöcken sichtbar bleiben.
+      breaks.forEach(e => renderEvent(layer, e, days, true));
+      renderNowLine(layer, days);
+
+      const runs = personal.filter(e => e.type === 'run');
+      const doneRuns = runs.filter(e => e.done).length;
+      runProgressEl.textContent = runs.length ? `Runs ${doneRuns}/${runs.length} erledigt` : 'Keine Runs geplant';
+      runProgressEl.classList.toggle('good', runs.length > 0 && doneRuns === runs.length);
+
+      const end = addDays(weekStart, 6);
+      weekTitleEl.textContent = `${pad(weekStart.getDate())}. ${MONTHS[weekStart.getMonth()]} – ${pad(end.getDate())}. ${MONTHS[end.getMonth()]} ${end.getFullYear()}`;
+      wahBadgeEl.textContent = isWahWeek(weekStart) ? 'WAH: deine Woche' : 'WAH: andere Hälfte';
+    }
+
+    function renderEvent(layer, e, days, generatedSchool) {
+      const dayIndex = days.findIndex(d => isoDate(d) === e.date);
+      if (dayIndex < 0) return;
+
+      const startMin = Math.max(minutes(e.start), START_HOUR * 60);
+      const endMin = Math.min(minutes(e.end), END_HOUR * 60);
+      if (endMin <= startMin) return;
+
+      const dayWidth = 100 / days.length;
+      const top = ((startMin - START_HOUR * 60) / 30) * slotHeight();
+      const height = Math.max(20, ((endMin - startMin) / 30) * slotHeight() - 2);
+
+      const duration = endMin - startMin;
+      const sizeClass = duration <= 20 ? ' tiny-event' : duration <= 50 ? ' short-event' : '';
+      const el = document.createElement('div');
+      el.className = `event ${e.type || 'other'}${e.type === 'run' && e.done ? ' done' : ''}${sizeClass}`;
+      el.style.left = `calc(${dayIndex * dayWidth}% + 3px)`;
+      el.style.width = `calc(${dayWidth}% - 6px)`;
+      el.style.top = `${top + 2}px`;
+      el.style.height = `${height}px`;
+      const checkHtml = (!generatedSchool && e.type === 'run')
+        ? `<button class="run-check" type="button" aria-label="${e.done ? 'Als offen markieren' : 'Run abhaken'}" title="${e.done ? 'Als offen markieren' : 'Run abhaken'}">${e.done ? '✓' : ''}</button>`
+        : '';
+      el.innerHTML = `${checkHtml}<div class="event-top"><div class="name">${escapeHtml(e.name)}</div><div class="event-time">${escapeHtml(e.start)}–${escapeHtml(e.end)}</div></div>${e.description ? `<div class="event-desc">${escapeHtml(e.description)}</div>` : ''}`;
+      if (!generatedSchool) {
+        el.title = 'Klicken zum Bearbeiten';
+        const check = el.querySelector('.run-check');
+        if (check) check.addEventListener('click', (ev) => {
+          ev.stopPropagation();
+          toggleRunDone(e.id);
+        });
+        el.addEventListener('click', () => openEdit(e.id));
+      } else {
+        el.title = 'Fixer Stundenplan';
+      }
+      layer.appendChild(el);
+    }
+
+    function escapeHtml(s) {
+      return String(s ?? '').replace(/[&<>'"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
+    }
+
+
+    function toggleRunDone(id) {
+      const e = state.events.find(x => x.id === id);
+      if (!e || e.type !== 'run') return;
+      e.done = !e.done;
+      saveState();
+      render();
+    }
+
+    function renderNowLine(layer, days) {
+      const now = new Date();
+      const todayIndex = days.findIndex(d => isoDate(d) === isoDate(now));
+      const nowMinutes = now.getHours() * 60 + now.getMinutes();
+      if (todayIndex < 0 || nowMinutes < START_HOUR * 60 || nowMinutes > END_HOUR * 60) return;
+      const dayWidth = 100 / days.length;
+      const line = document.createElement('div');
+      line.className = 'now-line';
+      line.style.left = `calc(${todayIndex * dayWidth}% + 3px)`;
+      line.style.width = `calc(${dayWidth}% - 6px)`;
+      line.style.top = `${((nowMinutes - START_HOUR * 60) / 30) * slotHeight()}px`;
+      layer.appendChild(line);
+    }
+
+    function updateRunOptions() {
+      const isRun = document.getElementById('type').value === 'run';
+      runOptionsEl.hidden = !isRun;
+      if (!isRun) runDoneEl.checked = false;
+    }
+
+    function setEndFromDuration(durationMinutes) {
+      const start = document.getElementById('start').value || '18:00';
+      const endM = minutes(start) + durationMinutes;
+      document.getElementById('end').value = `${pad(Math.floor(endM / 60))}:${pad(endM % 60)}`;
+    }
+
+    const RUN_PRESETS = {
+      easy: {
+        name: 'Easy Run',
+        description: 'Locker laufen, ganze Sätze sprechen können. Kein Pace-Jagen.',
+        duration: 60,
+      },
+      quality: {
+        name: 'Quality Run',
+        description: 'Einlaufen → Qualitätsblock → locker auslaufen.',
+        duration: 75,
+      },
+      long: {
+        name: 'Long Run',
+        description: 'Locker und kontrolliert. Fokus Ausdauer, nicht Tempo.',
+        duration: 100,
+      },
+    };
+
+    function hasOverlap(a, b) {
+      return a.date === b.date && minutes(a.start) < minutes(b.end) && minutes(a.end) > minutes(b.start);
+    }
+
+    function conflictsFor(event) {
+      const monday = getMonday(new Date(`${event.date}T12:00:00`));
+      const school = schoolEventsForWeek(monday);
+      const personal = state.events.filter(e => e.id !== editingId);
+      return [...school, ...personal].filter(e => hasOverlap(event, e));
+    }
+
+    function openNew(date = isoDate(new Date()), start = '18:00', preferredType = 'other') {
+      editingId = null;
+      document.getElementById('dialogTitle').textContent = 'Neues Ereignis';
+      document.getElementById('name').value = '';
+      document.getElementById('description').value = '';
+      document.getElementById('date').value = date;
+      document.getElementById('start').value = start;
+      const startM = minutes(start) + 60;
+      document.getElementById('end').value = `${pad(Math.floor(startM/60))}:${pad(startM%60)}`;
+      document.getElementById('type').value = preferredType;
+      runDoneEl.checked = false;
+      updateRunOptions();
+      deleteBtn.style.visibility = 'hidden';
+      duplicateBtn.style.visibility = 'hidden';
+      dialog.showModal();
+    }
+
+    function openEdit(id) {
+      const e = state.events.find(x => x.id === id);
+      if (!e) return;
+      editingId = id;
+      document.getElementById('dialogTitle').textContent = 'Ereignis bearbeiten';
+      document.getElementById('name').value = e.name;
+      document.getElementById('description').value = e.description || '';
+      document.getElementById('date').value = e.date;
+      document.getElementById('start').value = e.start;
+      document.getElementById('end').value = e.end;
+      document.getElementById('type').value = e.type || 'other';
+      runDoneEl.checked = Boolean(e.done);
+      updateRunOptions();
+      deleteBtn.style.visibility = 'visible';
+      duplicateBtn.style.visibility = 'visible';
+      dialog.showModal();
+    }
+
+    form.addEventListener('submit', (ev) => {
+      ev.preventDefault();
+      const event = {
+        id: editingId || uid(),
+        name: document.getElementById('name').value.trim(),
+        description: document.getElementById('description').value.trim(),
+        date: document.getElementById('date').value,
+        start: document.getElementById('start').value,
+        end: document.getElementById('end').value,
+        type: document.getElementById('type').value,
+        done: document.getElementById('type').value === 'run' ? runDoneEl.checked : false,
+      };
+      if (!event.name || !event.date || !event.start || !event.end) return;
+      if (minutes(event.end) <= minutes(event.start)) {
+        alert('Ende muss nach dem Start liegen.');
+        return;
+      }
+      const conflicts = conflictsFor(event);
+      if (conflicts.length) {
+        const names = [...new Set(conflicts.map(e => e.name))].slice(0, 3).join(', ');
+        if (!confirm(`Überschneidung mit: ${names}. Trotzdem speichern?`)) return;
+      }
+      if (editingId) {
+        state.events = state.events.map(e => e.id === editingId ? event : e);
+      } else {
+        state.events.push(event);
+      }
+      saveState();
+      dialog.close();
+      render();
+    });
+
+    deleteBtn.addEventListener('click', () => {
+      if (!editingId) return;
+      state.events = state.events.filter(e => e.id !== editingId);
+      saveState();
+      dialog.close();
+      render();
+    });
+
+    duplicateBtn.addEventListener('click', () => {
+      const e = state.events.find(x => x.id === editingId);
+      if (!e) return;
+      editingId = null;
+      document.getElementById('dialogTitle').textContent = 'Ereignis duplizieren';
+      runDoneEl.checked = false;
+      deleteBtn.style.visibility = 'hidden';
+      duplicateBtn.style.visibility = 'hidden';
+    });
+
+    document.getElementById('type').addEventListener('change', updateRunOptions);
+    document.querySelectorAll('[data-run-preset]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const preset = RUN_PRESETS[btn.dataset.runPreset];
+        if (!preset) return;
+        document.getElementById('name').value = preset.name;
+        document.getElementById('description').value = preset.description;
+        setEndFromDuration(preset.duration);
+      });
+    });
+
+    function defaultDateForViewedWeek() {
+      const today = isoDate(new Date());
+      const from = isoDate(weekStart);
+      const to = isoDate(addDays(weekStart, 6));
+      return today >= from && today <= to ? today : from;
+    }
+
+    function scrollToDayStart(dayIso) {
+      const scroll = document.querySelector('.calendar-scroll');
+      if (!scroll) return;
+      const school = schoolEventsForWeek(weekStart).filter(e => e.date === dayIso);
+      const personal = state.events.filter(e => e.date === dayIso);
+      const all = [...school, ...personal];
+      const first = all.length ? Math.min(...all.map(e => minutes(e.start))) : 9 * 60;
+      const target = Math.max(START_HOUR * 60, first - 30);
+      const y = ((target - START_HOUR * 60) / 30) * slotHeight();
+      scroll.scrollTo({ top: Math.max(0, y - 8), behavior: 'smooth' });
+    }
+
+    function scrollToNow() {
+      const scroll = document.querySelector('.calendar-scroll');
+      const now = new Date();
+      const mins = now.getHours() * 60 + now.getMinutes();
+      if (mins < START_HOUR * 60 || mins > END_HOUR * 60) return;
+      const y = ((mins - START_HOUR * 60) / 30) * slotHeight();
+      scroll.scrollTo({ top: Math.max(0, y - 170), behavior: 'smooth' });
+    }
+
+    document.getElementById('cancelEvent').addEventListener('click', () => dialog.close());
+    document.getElementById('newRun').addEventListener('click', () => openNew(defaultDateForViewedWeek(), '18:00', 'run'));
+    document.getElementById('newEvent').addEventListener('click', () => openNew(defaultDateForViewedWeek(), '18:00'));
+    document.getElementById('newRunMobile').addEventListener('click', () => openNew(isoDate(addDays(weekStart, mobileDayIndex)), '18:00', 'run'));
+    document.getElementById('newEventMobile').addEventListener('click', () => openNew(isoDate(addDays(weekStart, mobileDayIndex)), '18:00'));
+    document.getElementById('prevWeek').addEventListener('click', () => { weekStart = addWeeks(weekStart, -1); render(); });
+    document.getElementById('nextWeek').addEventListener('click', () => { weekStart = addWeeks(weekStart, 1); render(); });
+    document.getElementById('todayBtn').addEventListener('click', () => {
+      const now = new Date();
+      weekStart = getMonday(now);
+      mobileDayIndex = (now.getDay() + 6) % 7;
+      render();
+      requestAnimationFrame(scrollToNow);
+    });
+
+    document.getElementById('exportBtn').addEventListener('click', () => {
+      const blob = new Blob([JSON.stringify(state, null, 2)], {type: 'application/json'});
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'school-run-calendar-backup.json';
+      a.click();
+      URL.revokeObjectURL(a.href);
+    });
+
+    document.getElementById('importBtn').addEventListener('click', () => document.getElementById('importFile').click());
+    document.getElementById('importFile').addEventListener('change', async (ev) => {
+      const file = ev.target.files?.[0];
+      if (!file) return;
+      try {
+        const data = JSON.parse(await file.text());
+        if (!Array.isArray(data.events)) throw new Error('Ungültig');
+        state = data;
+        saveState();
+        render();
+      } catch (_) {
+        alert('Diese Datei ist kein gültiges Kalender-Backup.');
+      }
+      ev.target.value = '';
+    });
+
+    // Handy: links/rechts wischen wechselt den Tag. Am Rand geht es in die nächste/vorige Woche.
+    let touchStartX = null;
+    let touchStartY = null;
+    const calendarScrollEl = document.querySelector('.calendar-scroll');
+    calendarScrollEl.addEventListener('touchstart', (ev) => {
+      const t = ev.touches[0];
+      touchStartX = t.clientX;
+      touchStartY = t.clientY;
+    }, { passive: true });
+    calendarScrollEl.addEventListener('touchend', (ev) => {
+      if (!isMobile() || touchStartX === null) return;
+      const t = ev.changedTouches[0];
+      const dx = t.clientX - touchStartX;
+      const dy = t.clientY - touchStartY;
+      touchStartX = touchStartY = null;
+      if (Math.abs(dx) < 55 || Math.abs(dx) < Math.abs(dy) * 1.25) return;
+      if (dx < 0) {
+        if (mobileDayIndex < 6) mobileDayIndex++;
+        else { weekStart = addWeeks(weekStart, 1); mobileDayIndex = 0; }
+      } else {
+        if (mobileDayIndex > 0) mobileDayIndex--;
+        else { weekStart = addWeeks(weekStart, -1); mobileDayIndex = 6; }
+      }
+      render();
+    }, { passive: true });
+
+    window.addEventListener('resize', () => {
+      const mobile = isMobile();
+      if (mobile !== lastMobileMode) {
+        lastMobileMode = mobile;
+        render();
+      }
+    });
+
+    // Optional PWA/offline support on GitHub Pages.
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js').catch(() => {}));
+    }
+
+    render();
+    if (isMobile()) requestAnimationFrame(scrollToNow);
+  </script>
+</body>
+</html>
