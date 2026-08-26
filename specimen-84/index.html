@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#0a0a0a" />
+  <meta name="description" content="SPECIMEN 84 — an interactive WebGL field record." />
+  <title>SPECIMEN 84 — Field Record</title>
+  <link rel="preconnect" href="https://raw.githubusercontent.com" crossorigin />
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <div class="loader" id="loader" aria-live="polite">
+    <div class="loader__top"><span>FIELD SYSTEM</span><span id="loaderPct">00</span></div>
+    <div class="loader__track"><i id="loaderBar"></i></div>
+    <p>Decoding specimen geometry</p>
+  </div>
+
+  <canvas id="gl" aria-hidden="true"></canvas>
+  <canvas id="grain" aria-hidden="true"></canvas>
+
+  <header class="topbar">
+    <a class="mark" href="#arrival" aria-label="Specimen 84, back to top">S/84</a>
+    <div class="topbar__meta"><span>FIELD RECORD 26.08.26</span><span class="status"><i></i> LIVE MODEL</span></div>
+    <div class="chapter" id="chapterLabel">01 / ARRIVAL</div>
+  </header>
+
+  <div class="scroll-meter" aria-hidden="true"><i id="scrollMeter"></i></div>
+
+  <main>
+    <section class="scene scene--arrival" id="arrival" data-chapter="01 / ARRIVAL">
+      <div class="arrival__grid behind" aria-hidden="true"></div>
+      <div class="arrival__eyebrow front">UNCLASSIFIED / BIOFORM / 84</div>
+      <h1 class="arrival__title behind"><span>SPEC</span><span>IMEN</span></h1>
+      <div class="arrival__number front">84</div>
+      <div class="arrival__note front">
+        <span>47°33' N</span>
+        <span>08°32' E</span>
+        <span>05:17:42</span>
+      </div>
+      <p class="arrival__copy front">Recovered intact.<br/>Movement detected after capture.</p>
+      <div class="scroll-cue front"><span>SCROLL TO INSPECT</span><i></i></div>
+    </section>
+
+    <section class="scene scene--scan" id="scan" data-chapter="02 / SCAN">
+      <div class="scan__index behind">02</div>
+      <div class="scan__rail front">
+        <span>OPTICAL PASS</span><span>400–700 NM</span><span>NO DAMAGE</span>
+      </div>
+      <div class="scan__title front">
+        <span>FORM</span>
+        <strong>IS NOT</strong>
+        <span>FUNCTION.</span>
+      </div>
+      <div class="measure measure--a front"><i></i><b>163.97</b><span>MAX / Y</span></div>
+      <div class="measure measure--b front"><i></i><b>165°</b><span>HEAD / AXIS</span></div>
+      <div class="scan__foot front">
+        <p>The outer geometry is familiar. The behavior is not.</p>
+        <span>SCAN PASS 2 OF 4</span>
+      </div>
+    </section>
+
+    <section class="scene scene--signal" id="signal" data-chapter="03 / SIGNAL">
+      <div class="signal__rule front"><span>ACTIVE RESPONSE</span><span>+18.4 dB</span></div>
+      <h2 class="signal__headline behind">IT<br/>HEARD<br/>US.</h2>
+      <div class="signal__panel front">
+        <canvas id="wave" width="900" height="260" aria-hidden="true"></canvas>
+        <div class="signal__readout"><span>13.8 HZ</span><span>REPEATING</span><span>03:12:08</span></div>
+      </div>
+      <div class="scanline" aria-hidden="true"></div>
+      <p class="signal__copy front">The pulse began only after the room went silent.</p>
+    </section>
+
+    <section class="scene scene--fragment" id="fragment" data-chapter="04 / FRAGMENT">
+      <div class="fragment__stamp front">RECOVERED AUDIO / CORRUPTED</div>
+      <blockquote class="fragment__quote front">
+        <span>“DO NOT</span>
+        <span>FOLLOW THE</span>
+        <span>WATER.”</span>
+      </blockquote>
+      <div class="fragment__logs front" aria-label="Recovered log fragments">
+        <div><b>05:18:03</b><span>subject rotates against restraint</span></div>
+        <div><b>05:18:11</b><span>ambient temperature -3.4°</span></div>
+        <div><b>05:18:12</b><span>audio source absent</span></div>
+        <div><b>05:18:14</b><span>record ends</span></div>
+      </div>
+      <div class="fragment__void behind">84</div>
+    </section>
+
+    <section class="scene scene--rebuild" id="rebuild" data-chapter="05 / RECONSTRUCTION">
+      <div class="rebuild__kicker front">RECONSTRUCTION / MANUAL</div>
+      <h2 class="rebuild__title front">WE PUT THE<br/>SEQUENCE BACK.</h2>
+      <p class="rebuild__intro front">Four frames were missing. Their absence was more precise than damage.</p>
+      <div class="timeline front">
+        <article><span>01</span><i></i><b>FOUND</b><p>Object recovered beside still water.</p></article>
+        <article><span>02</span><i></i><b>SCANNED</b><p>Geometry matched a common species.</p></article>
+        <article><span>03</span><i></i><b>HEARD</b><p>Signal returned our own room tone.</p></article>
+        <article><span>04</span><i></i><b>RELEASED</b><p>No release was authorized.</p></article>
+      </div>
+      <div class="rebuild__notation front">FRAME 211 — 214 / RESTORED</div>
+    </section>
+
+    <section class="scene scene--release" id="release" data-chapter="06 / RELEASE">
+      <div class="release__word behind">GONE</div>
+      <div class="release__top front"><span>CASE STATUS</span><b>OPEN</b></div>
+      <h2 class="release__title front">THE CAGE<br/>WAS STILL<br/>LOCKED.</h2>
+      <div class="release__footer front">
+        <p>Move the pointer.<br/>The record is no longer passive.</p>
+        <div>
+          <span>MODEL / SCATTERING SKULL</span>
+          <span>CC0 1.0 / V. PETKOVIC</span>
+          <span>RENDERER / CUSTOM WEBGL2</span>
+        </div>
+      </div>
+      <a class="restart front" href="#arrival"><span>REVIEW RECORD</span><i>↗</i></a>
+    </section>
+  </main>
+
+  <noscript>This field record requires JavaScript to render the recovered model.</noscript>
+  <script defer src="./main.js"></script>
+</body>
+</html>
