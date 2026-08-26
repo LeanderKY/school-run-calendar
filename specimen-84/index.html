@@ -3,120 +3,178 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <meta name="theme-color" content="#0a0a0a" />
-  <meta name="description" content="SPECIMEN 84 — an interactive WebGL field record." />
-  <title>SPECIMEN 84 — Field Record</title>
+  <meta name="theme-color" content="#0b0b0a" />
+  <meta name="description" content="SPECIMEN 84 — an interactive field record that changes when you investigate it." />
+  <title>SPECIMEN 84 / Chain of Custody</title>
   <link rel="preconnect" href="https://raw.githubusercontent.com" crossorigin />
-  <link rel="stylesheet" href="./styles.css" />
+  <link rel="stylesheet" href="./v2.css" />
 </head>
 <body>
-  <div class="loader" id="loader" aria-live="polite">
-    <div class="loader__top"><span>FIELD SYSTEM</span><span id="loaderPct">00</span></div>
-    <div class="loader__track"><i id="loaderBar"></i></div>
-    <p>Decoding specimen geometry</p>
+  <div class="boot" id="loader" aria-live="polite">
+    <div class="boot__code">S/84 — FIELD TERMINAL</div>
+    <div class="boot__count" id="loaderPct">00</div>
+    <div class="boot__rail"><i id="loaderBar"></i></div>
+    <p>opening evidence container</p>
   </div>
 
   <canvas id="gl" aria-hidden="true"></canvas>
   <canvas id="grain" aria-hidden="true"></canvas>
 
-  <header class="topbar">
-    <a class="mark" href="#arrival" aria-label="Specimen 84, back to top">S/84</a>
-    <div class="topbar__meta"><span>FIELD RECORD 26.08.26</span><span class="status"><i></i> LIVE MODEL</span></div>
-    <div class="chapter" id="chapterLabel">01 / ARRIVAL</div>
+  <aside class="case-strip" aria-label="Case status">
+    <a href="#acquire" class="case-strip__id">S/84</a>
+    <div class="case-strip__custody" id="custodyState">SEALED</div>
+    <div class="case-strip__meter"><i id="scrollMeter"></i></div>
+    <div class="case-strip__act" id="chapterLabel">01</div>
+  </aside>
+
+  <header class="operator-strip">
+    <div><span>FIELD RECORD</span><b>84-6A</b></div>
+    <div class="operator-strip__center"><span>CHAIN OF CUSTODY</span><b id="custodyHeader">INTACT</b></div>
+    <button class="sound-key" id="soundKey" type="button" aria-pressed="false"><span>MONITOR</span><b>OFF</b></button>
   </header>
 
-  <div class="scroll-meter" aria-hidden="true"><i id="scrollMeter"></i></div>
-
   <main>
-    <section class="scene scene--arrival" id="arrival" data-chapter="01 / ARRIVAL">
-      <div class="arrival__grid behind" aria-hidden="true"></div>
-      <div class="arrival__eyebrow front">UNCLASSIFIED / BIOFORM / 84</div>
-      <h1 class="arrival__title behind"><span>SPEC</span><span>IMEN</span></h1>
-      <div class="arrival__number front">84</div>
-      <div class="arrival__note front">
-        <span>47°33' N</span>
-        <span>08°32' E</span>
-        <span>05:17:42</span>
+    <section class="act act--acquire" id="acquire" data-chapter="01" data-act-name="ACQUIRE">
+      <div class="folio folio--a" aria-hidden="true">84</div>
+      <div class="act-label">01 / ACQUIRE</div>
+      <div class="acquire-title" aria-label="Specimen 84">
+        <span>SPECIMEN</span>
+        <b>84</b>
       </div>
-      <p class="arrival__copy front">Recovered intact.<br/>Movement detected after capture.</p>
-      <div class="scroll-cue front"><span>SCROLL TO INSPECT</span><i></i></div>
+      <p class="acquire-lede">Recovered beside still water. Container sealed at 05:17:42.</p>
+      <div class="coordinates"><span>47°33'12.8" N</span><span>08°32'04.1" E</span><span>NO WITNESSES</span></div>
+
+      <div class="touch-field" id="acquireField" role="application" aria-label="Grab and rotate specimen">
+        <div class="touch-field__reticle" aria-hidden="true"><i></i><i></i></div>
+        <div class="touch-field__instruction"><b>PRESS + DRAG</b><span>break seal to inspect</span></div>
+      </div>
+
+      <div class="seal" id="custodySeal" aria-live="polite">
+        <span>CHAIN OF CUSTODY</span><b>SEALED</b><small>DO NOT HANDLE</small>
+      </div>
+      <div class="contact-trace" id="contactTrace" aria-hidden="true">NO OPERATOR CONTACT RECORDED</div>
     </section>
 
-    <section class="scene scene--scan" id="scan" data-chapter="02 / SCAN">
-      <div class="scan__index behind">02</div>
-      <div class="scan__rail front">
-        <span>OPTICAL PASS</span><span>400–700 NM</span><span>NO DAMAGE</span>
+    <section class="act act--scan" id="scan" data-chapter="02" data-act-name="OPTICAL SCAN">
+      <div class="act-label">02 / OPTICAL PASS</div>
+      <div class="scan-copy">
+        <h2>MOVE THE<br><em>PLANE.</em></h2>
+        <p>Surface geometry is ordinary until the specimen is sectioned by light.</p>
       </div>
-      <div class="scan__title front">
-        <span>FORM</span>
-        <strong>IS NOT</strong>
-        <span>FUNCTION.</span>
+
+      <div class="scanner" id="scanner" role="application" aria-label="Drag the scanner vertically over the specimen">
+        <div class="scanner__scale" aria-hidden="true"></div>
+        <div class="scanner__beam" id="scannerBeam"><span>DRAG</span><b id="scanDepth">+00.0</b></div>
+        <div class="scanner__anomaly scanner__anomaly--1" data-scan="0.23"><i></i><span>A</span></div>
+        <div class="scanner__anomaly scanner__anomaly--2" data-scan="0.54"><i></i><span>B</span></div>
+        <div class="scanner__anomaly scanner__anomaly--3" data-scan="0.79"><i></i><span>C</span></div>
       </div>
-      <div class="measure measure--a front"><i></i><b>163.97</b><span>MAX / Y</span></div>
-      <div class="measure measure--b front"><i></i><b>165°</b><span>HEAD / AXIS</span></div>
-      <div class="scan__foot front">
-        <p>The outer geometry is familiar. The behavior is not.</p>
-        <span>SCAN PASS 2 OF 4</span>
+
+      <div class="scan-ledger" aria-live="polite">
+        <div><span>PASS</span><b id="scanPass">01</b></div>
+        <div><span>SECTION</span><b id="scanSection">0.50</b></div>
+        <div><span>ANOMALIES</span><b><i id="anomalyCount">0</i>/3</b></div>
+      </div>
+      <ol class="anomaly-log" id="anomalyLog">
+        <li data-anomaly="0"><b>A</b><span>not acquired</span></li>
+        <li data-anomaly="1"><b>B</b><span>not acquired</span></li>
+        <li data-anomaly="2"><b>C</b><span>not acquired</span></li>
+      </ol>
+    </section>
+
+    <section class="act act--signal" id="signal" data-chapter="03" data-act-name="SIGNAL">
+      <div class="act-label">03 / RETURN SIGNAL</div>
+      <div class="signal-banner"><span>ROOM INPUT</span><b>ACTIVE</b><span>UNKNOWN RETURN</span></div>
+      <h2 class="signal-title">IT HEARD<br><span>THE ROOM.</span></h2>
+      <p class="signal-note">Find the frequency where the returned waveform stops behaving like noise.</p>
+
+      <div class="oscilloscope">
+        <canvas id="wave" width="1200" height="320" aria-label="Live waveform"></canvas>
+        <div class="scope-grid" aria-hidden="true"></div>
+      </div>
+
+      <div class="tuner" id="tuner">
+        <div class="tuner__head"><span>CALIBRATION</span><b><i id="freqValue">11.20</i> HZ</b></div>
+        <div class="tuner__scale" aria-hidden="true"><span>9</span><span>12</span><span>15</span><span>18</span></div>
+        <input id="freqInput" type="range" min="9" max="18" step="0.01" value="11.2" aria-label="Signal frequency in Hertz" />
+        <div class="tuner__needle" id="tunerNeedle"></div>
+      </div>
+
+      <div class="signal-fragment" id="signalFragment" aria-live="polite">
+        <span>RETURN TRANSCRIPT</span>
+        <p>–––– –––– ––– ––––––––</p>
       </div>
     </section>
 
-    <section class="scene scene--signal" id="signal" data-chapter="03 / SIGNAL">
-      <div class="signal__rule front"><span>ACTIVE RESPONSE</span><span>+18.4 dB</span></div>
-      <h2 class="signal__headline behind">IT<br/>HEARD<br/>US.</h2>
-      <div class="signal__panel front">
-        <canvas id="wave" width="900" height="260" aria-hidden="true"></canvas>
-        <div class="signal__readout"><span>13.8 HZ</span><span>REPEATING</span><span>03:12:08</span></div>
+    <section class="act act--fragment" id="fragment" data-chapter="04" data-act-name="FRAGMENT">
+      <div class="act-label">04 / DAMAGED RECORD</div>
+      <div class="fragment-index" aria-hidden="true">211—214</div>
+      <p class="fragment-preface">The audio exists. The file does not stay still long enough to read.</p>
+
+      <div class="stabilizer" id="stabilizer" role="button" tabindex="0" aria-label="Press and hold to stabilize damaged transcript">
+        <div class="stabilizer__rail"><i id="holdMeter"></i></div>
+        <span class="stabilizer__instruction">PRESS + HOLD / STABILIZE</span>
+        <div class="transcript transcript--ghost" aria-hidden="true">DO N0T F0LL0W / THE WATER / IT IS N0T REFLECTI0N</div>
+        <div class="transcript transcript--clean" id="cleanTranscript">DO NOT FOLLOW / THE WATER / IT IS NOT REFLECTION</div>
       </div>
-      <div class="scanline" aria-hidden="true"></div>
-      <p class="signal__copy front">The pulse began only after the room went silent.</p>
+      <div class="hold-readout"><span>STABILITY</span><b><i id="holdValue">00</i>%</b><span id="holdTime">0.00 s</span></div>
     </section>
 
-    <section class="scene scene--fragment" id="fragment" data-chapter="04 / FRAGMENT">
-      <div class="fragment__stamp front">RECOVERED AUDIO / CORRUPTED</div>
-      <blockquote class="fragment__quote front">
-        <span>“DO NOT</span>
-        <span>FOLLOW THE</span>
-        <span>WATER.”</span>
-      </blockquote>
-      <div class="fragment__logs front" aria-label="Recovered log fragments">
-        <div><b>05:18:03</b><span>subject rotates against restraint</span></div>
-        <div><b>05:18:11</b><span>ambient temperature -3.4°</span></div>
-        <div><b>05:18:12</b><span>audio source absent</span></div>
-        <div><b>05:18:14</b><span>record ends</span></div>
+    <section class="act act--reconstruct" id="reconstruct" data-chapter="05" data-act-name="RECONSTRUCT">
+      <div class="act-label">05 / MANUAL RECONSTRUCTION</div>
+      <h2 class="reconstruct-title">FOUR STRIPS.<br>ONE CONTINUITY.</h2>
+      <p class="reconstruct-note">Drag the recovered frames until the trace runs without a break.</p>
+
+      <div class="reconstruction" id="reconstruction" role="application" aria-label="Reorder four evidence strips">
+        <div class="reconstruction__rail" aria-hidden="true"></div>
+        <button class="evidence-strip" data-frame="C" data-seq="2" type="button"><span>F/213</span><i></i><b>03</b></button>
+        <button class="evidence-strip" data-frame="A" data-seq="0" type="button"><span>F/211</span><i></i><b>01</b></button>
+        <button class="evidence-strip" data-frame="D" data-seq="3" type="button"><span>F/214</span><i></i><b>04</b></button>
+        <button class="evidence-strip" data-frame="B" data-seq="1" type="button"><span>F/212</span><i></i><b>02</b></button>
       </div>
-      <div class="fragment__void behind">84</div>
+
+      <div class="reconstruction-result" id="reconstructionResult" aria-live="polite">
+        <span>CONTINUITY</span><b>BROKEN</b><p>Frame order unresolved.</p>
+      </div>
     </section>
 
-    <section class="scene scene--rebuild" id="rebuild" data-chapter="05 / RECONSTRUCTION">
-      <div class="rebuild__kicker front">RECONSTRUCTION / MANUAL</div>
-      <h2 class="rebuild__title front">WE PUT THE<br/>SEQUENCE BACK.</h2>
-      <p class="rebuild__intro front">Four frames were missing. Their absence was more precise than damage.</p>
-      <div class="timeline front">
-        <article><span>01</span><i></i><b>FOUND</b><p>Object recovered beside still water.</p></article>
-        <article><span>02</span><i></i><b>SCANNED</b><p>Geometry matched a common species.</p></article>
-        <article><span>03</span><i></i><b>HEARD</b><p>Signal returned our own room tone.</p></article>
-        <article><span>04</span><i></i><b>RELEASED</b><p>No release was authorized.</p></article>
+    <section class="act act--release" id="release" data-chapter="06" data-act-name="DARK ROOM">
+      <div class="act-label">06 / RELEASE</div>
+      <div class="release-copy">
+        <span>LIGHTS FAILED / 05:19:02</span>
+        <h2>THE CAGE<br>WAS STILL<br>LOCKED.</h2>
+        <p>Drag the inspection light. Do not assume the subject is the only thing in the room.</p>
       </div>
-      <div class="rebuild__notation front">FRAME 211 — 214 / RESTORED</div>
-    </section>
 
-    <section class="scene scene--release" id="release" data-chapter="06 / RELEASE">
-      <div class="release__word behind">GONE</div>
-      <div class="release__top front"><span>CASE STATUS</span><b>OPEN</b></div>
-      <h2 class="release__title front">THE CAGE<br/>WAS STILL<br/>LOCKED.</h2>
-      <div class="release__footer front">
-        <p>Move the pointer.<br/>The record is no longer passive.</p>
-        <div>
-          <span>MODEL / SCATTERING SKULL</span>
-          <span>CC0 1.0 / V. PETKOVIC</span>
-          <span>RENDERER / CUSTOM WEBGL2</span>
+      <div class="darkroom" id="darkroom" role="application" aria-label="Drag the inspection light around the dark room">
+        <div class="darkroom__evidence" id="darkEvidence">
+          <div class="scratch scratch--a">///</div>
+          <div class="scratch scratch--b">//////</div>
+          <div class="wall-note wall-note--a">cage latch untouched</div>
+          <div class="wall-note wall-note--b">shadow direction impossible</div>
+          <div class="trace-print" id="operatorTrace">
+            <span>OPERATOR RESIDUE / SESSION</span>
+            <b>NO TRACE</b>
+            <ul></ul>
+          </div>
+          <div class="impossible-mark" aria-hidden="true"><i></i><i></i><i></i></div>
         </div>
+        <div class="darkroom__veil" id="darkVeil"></div>
+        <div class="inspection-light" id="inspectionLight"><i></i><span>DRAG LIGHT</span></div>
       </div>
-      <a class="restart front" href="#arrival"><span>REVIEW RECORD</span><i>↗</i></a>
+
+      <div class="release-status"><span>CASE STATUS</span><b>OPEN</b></div>
+      <a class="restart" href="#acquire"><span>RESEAL / RESTART</span><b>↗</b></a>
     </section>
   </main>
 
-  <noscript>This field record requires JavaScript to render the recovered model.</noscript>
-  <script defer src="./main.js"></script>
+  <noscript>This field record requires JavaScript to operate its evidence instruments.</noscript>
+  <script defer src="./core.js"></script>
+  <script defer src="./act-01.js"></script>
+  <script defer src="./act-02.js"></script>
+  <script defer src="./act-03.js"></script>
+  <script defer src="./act-04.js"></script>
+  <script defer src="./act-05.js"></script>
+  <script defer src="./act-06.js"></script>
 </body>
 </html>
