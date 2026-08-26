@@ -5,20 +5,22 @@
   if(!input||!wave)return;
   const ctx=wave.getContext('2d');
   const target=13.8;
-  let freq=Number(input.value)||11.2,coherence=0,lockHold=0,locked=false;
+  let freq=Number(input.value)||11.2,coherence=0,lockHold=0,locked=false,interactionUntil=0;
+
+  function engage(){interactionUntil=performance.now()+2200;S.markContact();}
 
   function calculate(){
     const dist=Math.abs(freq-target);
     coherence=Math.pow(S.clamp(1-dist/1.55),1.7);
     S.state.tunerBest=Math.max(S.state.tunerBest,coherence);
-    if(S.activeAct===2)S.control.signalLock=coherence;
     if(valueEl)valueEl.textContent=freq.toFixed(2);
     if(needle)needle.style.setProperty('--x',`${((freq-9)/9)*100}%`);
     S.audio?.tune(freq,coherence);
   }
 
-  input.addEventListener('input',()=>{freq=Number(input.value);calculate();});
-  input.addEventListener('pointerdown',()=>S.markContact());
+  input.addEventListener('input',()=>{freq=Number(input.value);engage();calculate();});
+  input.addEventListener('pointerdown',engage);
+  input.addEventListener('focus',()=>{interactionUntil=performance.now()+2200;});
 
   function resizeWave(){
     const r=wave.getBoundingClientRect(),dpr=Math.min(devicePixelRatio||1,1.5),w=Math.max(1,Math.floor(r.width*dpr)),h=Math.max(1,Math.floor(r.height*dpr));
@@ -52,7 +54,8 @@
   }
 
   S.addUpdater(({time,dt,activeAct})=>{
-    if(activeAct!==2){if(S.control.signalLock!==0)S.control.signalLock=0;return;}
+    const operating=activeAct===2||time<interactionUntil;
+    if(!operating){if(S.control.signalLock!==0)S.control.signalLock=0;return;}
     S.control.signalLock=coherence;
     draw(time);
     if(coherence>.965&&!locked){
@@ -66,7 +69,7 @@
     }else if(!locked){lockHold=Math.max(0,lockHold-dt*1.8);}
   });
 
-  S.on('act',i=>{if(i!==2)S.control.signalLock=0;else calculate();});
+  S.on('act',i=>{if(i!==2&&performance.now()>=interactionUntil)S.control.signalLock=0;else calculate();});
   addEventListener('resize',resizeWave,{passive:true});
   calculate();resizeWave();
 })();
