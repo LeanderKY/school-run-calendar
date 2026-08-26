@@ -15,7 +15,13 @@ function cleanNetwork(url,status){
 }
 
 async function attachDiagnostics(page,label){
-  page.on('console',m=>{if(m.type()==='error')report.consoleErrors.push(`${label}: ${m.text()}`);});
+  page.on('console',m=>{
+    if(m.type()!=='error')return;
+    const text=m.text();
+    // Resource failures are checked with the response listener below, which still catches unexpected 4xx/5xx URLs.
+    if(text.startsWith('Failed to load resource:'))return;
+    report.consoleErrors.push(`${label}: ${text}`);
+  });
   page.on('pageerror',e=>report.pageErrors.push(`${label}: ${e.message}`));
   page.on('response',r=>{if(!cleanNetwork(r.url(),r.status()))report.networkErrors.push(`${label}: ${r.status()} ${r.url()}`);});
 }
