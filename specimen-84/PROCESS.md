@@ -123,3 +123,4 @@ Not “all planned features exist.” Done means:
 
 ## Pass log
 - RESET: Created the production loop after comparing current award-winning interactive sites. Core problem identified: the previous version had art direction, but the model behaved mostly as decoration and scrolling did most of the work.
+- ARCHITECTURE: Rebuilt the HTML around six user verbs: GRAB → SCAN → TUNE → HOLD → REORDER → REVEAL. Added a persistent chain-of-custody state so every action can affect the finale. Pre-flight concern: Act 05 must visually read as one forensic rail with strips, never as a four-card UI.
