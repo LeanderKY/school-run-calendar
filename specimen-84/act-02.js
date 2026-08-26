@@ -50,7 +50,7 @@
   scanner.addEventListener('pointerup',release);scanner.addEventListener('pointercancel',release);
 
   scanner.addEventListener('keydown',e=>{
-    let v=lastValue,used=true,step=e.shiftKey?.04:.012;
+    let v=lastValue,used=true,step=e.shiftKey ? .04 : .012;
     if(e.key==='ArrowUp')v-=step;else if(e.key==='ArrowDown')v+=step;else if(e.key==='Home')v=.02;else if(e.key==='End')v=.98;else used=false;
     if(used){setValue(v,true);e.preventDefault();}
   });
