@@ -46,18 +46,18 @@
     e.preventDefault();
   });
 
-  function release(e){
+  function release(){
     if(!dragging)return;
     dragging=false;document.body.classList.remove('is-grabbing');S.control.freezeP=null;
     if(pointerId!==null&&field.hasPointerCapture?.(pointerId)) field.releasePointerCapture(pointerId);
     pointerId=null;
-    if(moved<5){S.control.manualRotTarget[1]+=0.055;}
+    if(moved<5){S.control.manualRotTarget[1]=S.clamp(S.control.manualRotTarget[1]+.055,-1.15,1.15);}
     updateTrace();
   }
   field.addEventListener('pointerup',release);field.addEventListener('pointercancel',release);
 
   field.addEventListener('keydown',e=>{
-    const step=e.shiftKey?.12:.055;let used=true;
+    const step=e.shiftKey ? .12 : .055;let used=true;
     if(e.key==='ArrowLeft')S.control.manualRotTarget[1]-=step;
     else if(e.key==='ArrowRight')S.control.manualRotTarget[1]+=step;
     else if(e.key==='ArrowUp')S.control.manualRotTarget[0]-=step;
