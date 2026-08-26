@@ -1,0 +1,60 @@
+name: Specimen QA
+
+on:
+  push:
+    paths:
+      - 'specimen-84/**'
+      - '.github/workflows/specimen-qa.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  qa:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: JavaScript syntax gate
+        run: |
+          set -e
+          for f in specimen-84/core.js specimen-84/act-01.js specimen-84/act-02.js specimen-84/act-03.js specimen-84/act-04.js specimen-84/act-05.js specimen-84/act-06.js specimen-84/qa-browser.mjs; do
+            echo "checking $f"
+            node --check "$f"
+          done
+
+      - name: Install Playwright
+        run: |
+          npm install --no-save playwright@1.55.0
+          npx playwright install --with-deps chromium
+
+      - name: Start local site
+        run: |
+          python3 -m http.server 4173 >/tmp/specimen-http.log 2>&1 &
+          for i in {1..30}; do
+            if curl -fsS http://127.0.0.1:4173/specimen-84/ >/dev/null; then exit 0; fi
+            sleep 1
+          done
+          cat /tmp/specimen-http.log
+          exit 1
+
+      - name: Run six-act browser QA
+        env:
+          S84_URL: http://127.0.0.1:4173/specimen-84/
+        run: node specimen-84/qa-browser.mjs
+
+      - name: Upload QA screenshots and report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: specimen-84-qa
+          path: specimen-84/qa-output
+          if-no-files-found: warn
