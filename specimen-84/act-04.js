@@ -28,7 +28,7 @@
   plate.addEventListener('blur',end);
 
   S.addUpdater(({time,dt,activeAct})=>{
-    if(activeAct!==3&&holding)end();
+    if(!holding&&stability<=0&&activeAct!==3)return;
     if(holding){
       stability=S.clamp(stability+dt/1180);
       S.state.fragmentHoldMs+=dt;
