@@ -61,7 +61,7 @@
   room.addEventListener('pointerup',end);room.addEventListener('pointercancel',end);
 
   room.addEventListener('keydown',e=>{
-    const step=e.shiftKey?.015:.045;let used=true;
+    const step=e.shiftKey ? .015 : .045;let used=true;
     if(e.key==='ArrowLeft')x-=step;else if(e.key==='ArrowRight')x+=step;else if(e.key==='ArrowUp')y-=step;else if(e.key==='ArrowDown')y+=step;else used=false;
     if(used){S.markContact();setLight(x,y,true);buildTrace();e.preventDefault();}
   });
